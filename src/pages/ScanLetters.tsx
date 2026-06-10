@@ -3,9 +3,11 @@ import {
   Upload, FileText, Loader2, Sparkles, Calendar, AlertTriangle,
   Plus, CheckCircle2, Trash2, ChevronDown, ChevronUp,
   WifiOff, Clock, ImageOff, ShieldAlert, KeyRound,
+  Crown, Info,
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { supabase, ScannedDocument, Urgency, DocumentType, Category } from '../lib/supabase';
+import { useProfile } from '../contexts/ProfileContext';
+import { supabase, ScannedDocument, Urgency, DocumentType, Category, FREE_TIER_DAILY_LIMIT } from '../lib/supabase';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -183,6 +185,7 @@ function parseScanError(code: string | undefined, message: string): ScanError {
 // ---------------------------------------------------------------------------
 export default function ScanLetters() {
   const { t, language } = useLanguage();
+  const { isPremium, scansRemaining, incrementScanUsage } = useProfile();
   const [step, setStep]               = useState<ScanStep>('idle');
   const [result, setResult]           = useState<ScanResult | null>(null);
   const [scanError, setScanError]     = useState<ScanError | null>(null);
@@ -195,6 +198,7 @@ export default function ScanLetters() {
   const [previewUrl, setPreviewUrl]   = useState<string | null>(null);
   const [createdActions, setCreatedActions] = useState(false);
   const [compressed, setCompressed]   = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
   const lastFile = useRef<File | null>(null);
   const fileRef  = useRef<HTMLInputElement>(null);
 
@@ -216,6 +220,12 @@ export default function ScanLetters() {
   // Core analysis flow
   // -------------------------------------------------------------------------
   const processFile = useCallback(async (file: File) => {
+    // Check scan limit for free users
+    if (!isPremium && scansRemaining <= 0) {
+      setLimitReached(true);
+      return;
+    }
+
     lastFile.current = file;
     setPreviewUrl(URL.createObjectURL(file));
     setResult(null);
@@ -224,6 +234,7 @@ export default function ScanLetters() {
     setSaveError(null);
     setCreatedActions(false);
     setExpandedOcr(false);
+    setLimitReached(false);
 
     // Step 1: compress / convert
     setStep('compressing');
@@ -275,6 +286,11 @@ export default function ScanLetters() {
         return;
       }
 
+      // Increment usage for free users
+      if (!isPremium) {
+        await incrementScanUsage();
+      }
+
       setResult({
         ocrText:      data.ocrText,
         title:        data.title        ?? 'Document',
@@ -291,7 +307,7 @@ export default function ScanLetters() {
       setScanError(parseScanError(isTimeout ? 'TIMEOUT' : 'UNKNOWN', message));
       setStep('error');
     }
-  }, [language]);
+  }, [language, isPremium, scansRemaining, incrementScanUsage]);
 
   const retry = () => {
     if (lastFile.current) processFile(lastFile.current);
@@ -384,6 +400,42 @@ export default function ScanLetters() {
         <h2 className="text-xl font-bold text-neutral-900 dark:text-white">{t.scan.title}</h2>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">{t.scan.subtitle}</p>
       </div>
+
+      {/* Scan limit indicator for free users */}
+      {!isPremium && step === 'idle' && (
+        <div className="card p-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Info size={14} className="text-neutral-400" />
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              {scansRemaining} scans remaining today
+            </span>
+          </div>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+            scansRemaining > 2
+              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+              : scansRemaining > 0
+              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-500'
+              : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+          }`}>
+            Free Plan
+          </span>
+        </div>
+      )}
+
+      {/* Premium badge */}
+      {isPremium && step === 'idle' && (
+        <div className="card p-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Crown size={14} className="text-yellow-500" />
+            <span className="text-xs font-medium text-yellow-700 dark:text-yellow-400">
+              Unlimited scans
+            </span>
+          </div>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">
+            Premium
+          </span>
+        </div>
+      )}
 
       {/* ── Upload area ───────────────────────────────────────────────────── */}
       {step === 'idle' && (
@@ -618,7 +670,31 @@ export default function ScanLetters() {
         </div>
       )}
 
+      {/* ── Limit Reached ───────────────────────────────────────────────── */}
+      {limitReached && (
+        <div className="card p-6 flex flex-col items-center gap-4 text-center animate-fade-in">
+          <div className="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+            <AlertTriangle size={24} className="text-red-500" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-1">
+              Daily Limit Reached
+            </p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-xs">
+              You&apos;ve used all {FREE_TIER_DAILY_LIMIT} scans for today. Upgrade to Premium for unlimited scans.
+            </p>
+          </div>
+          <button
+            onClick={() => setLimitReached(false)}
+            className="btn-secondary w-full text-sm"
+          >
+            {t.common.back}
+          </button>
+        </div>
+      )}
+
       {/* ── History ───────────────────────────────────────────────────────── */}
+      {!limitReached && (
       <div>
         <div className="flex items-center justify-between mb-3">
           <p className="section-title mb-0">{t.scan.recentDocuments}</p>
@@ -654,6 +730,7 @@ export default function ScanLetters() {
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }

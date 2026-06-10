@@ -47,3 +47,47 @@ export interface ConversationMessage {
   tip?: string;
   timestamp: string;
 }
+
+// Subscription and Profile types
+export type UserRole = 'user' | 'admin';
+export type SubscriptionPlan = 'free' | 'premium';
+export type SubscriptionStatus = 'active' | 'expired' | 'cancelled';
+
+export interface Profile {
+  user_id: string;
+  display_name: string | null;
+  role: UserRole;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UsageTracking {
+  id: string;
+  user_id: string;
+  date: string;
+  scans_used: number;
+  created_at: string;
+}
+
+export interface AdminStats {
+  total_users: number;
+  active_users_today: number;
+  total_scans: number;
+  scans_today: number;
+  premium_users: number;
+  free_users: number;
+}
+
+// Subscription limits
+export const FREE_TIER_DAILY_LIMIT = 5;
+export const PREMIUM_UNLIMITED = -1; // -1 means unlimited

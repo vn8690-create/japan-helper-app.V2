@@ -1,9 +1,11 @@
-import { Sun, Moon, Globe, LogOut } from 'lucide-react';
+import { Sun, Moon, Globe, LogOut, Shield } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useProfile } from '../contexts/ProfileContext';
 import { Language, languageLabels } from '../i18n';
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Page } from './BottomNav';
 
 interface HeaderProps {
@@ -20,9 +22,11 @@ const pageTitleKeys: Record<Page, string> = {
 };
 
 export default function Header({ currentPage }: HeaderProps) {
+  const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
   const { isDark, toggleTheme } = useTheme();
   const { signOut } = useAuth();
+  const { isAdmin } = useProfile();
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
 
@@ -95,6 +99,18 @@ export default function Header({ currentPage }: HeaderProps) {
           >
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
+
+          {/* Admin button - only for admins */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              className="p-2 rounded-lg text-purple-600 dark:text-purple-400
+                         hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+              aria-label="Admin dashboard"
+            >
+              <Shield size={16} />
+            </button>
+          )}
 
           {/* Logout */}
           <button
