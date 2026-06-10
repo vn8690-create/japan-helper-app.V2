@@ -88,6 +88,59 @@ export interface AdminStats {
   free_users: number;
 }
 
+// Extended analytics types
+export interface AdminAnalytics {
+  dau: number;
+  wau: number;
+  mau: number;
+  total_users: number;
+  total_scans: number;
+  avg_scans_per_user: number;
+  premium_users: number;
+  free_users: number;
+  scans_today: number;
+  dau_yesterday: number | null;
+  wau_last_week: number | null;
+  mau_last_month: number | null;
+}
+
+export interface GrowthDataPoint {
+  date: string;
+  active_users: number;
+  total_scans: number;
+  new_users: number;
+}
+
+export interface DocumentTypeAnalytics {
+  document_type: string;
+  count: number;
+  percentage: number;
+}
+
+export interface CategoryAnalytics {
+  category: string;
+  count: number;
+  percentage: number;
+  completed: number;
+}
+
+export interface RecentRegistration {
+  user_id: string;
+  display_name: string | null;
+  role: string;
+  created_at: string;
+  subscription_plan: string;
+}
+
+export interface RecentScan {
+  id: string;
+  title: string;
+  document_type: string;
+  urgency: string;
+  created_at: string;
+  user_name: string | null;
+}
+
 // Subscription limits
 export const FREE_TIER_DAILY_LIMIT = 5;
 export const PREMIUM_UNLIMITED = -1; // -1 means unlimited
