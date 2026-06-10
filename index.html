@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Japan Helper — 日本生活サポート</title>
+    <meta name="description" content="Japan Helper — Your guide to living in Japan. Document scanning, action checklist, life guide, emergency help, and AI conversation practice." />
+    <meta property="og:title" content="Japan Helper" />
+    <meta property="og:description" content="Essential app for foreign residents in Japan" />
+    <meta name="theme-color" content="#c21414" />
+    <!-- SPA GitHub Pages: convert query string path back to real path -->
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
+      // This script checks to see if a redirect is present in the query string,
+      // converts it back into the correct URL and adds it to the browser's history
+      // so that the browser's address bar shows the correct URL.
+      // For example, if the browser is redirected to:
+      //   https://username.github.io/japan-helper/?/some/path
+      // this script will convert it to:
+      //   https://username.github.io/japan-helper/some/path
+      // and add it to the browser's history.
+      var pathSegmentsToKeep = 1; // Keep one segment (the repo name)
+      var l = window.location;
+      if (l.search[1] === '/') {
+        var decoded = l.search.slice(1).split('&').map(function(s) {
+          return s.replace(/~and~/g, '&')
+        }).join('&').split('~or~').map(function(s) {
+          return s.replace(/~eq~/g, '=').replace(/~hsh~/g, '#')
+        }).join('?').split('~slh~').map(function(s) {
+          return s.replace(/~slh~/g, '/')
+        }).join('/');
+        if (decoded.charAt(0) === '/') {
+          decoded = decoded.slice(1);
+        }
+        window.history.replaceState(
+          null, null,
+          l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+          l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/' +
+          decoded +
+          (l.hash || '')
+        );
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/main.tsx"></script>
+  </body>
+</html>
